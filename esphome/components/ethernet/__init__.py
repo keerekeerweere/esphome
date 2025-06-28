@@ -26,7 +26,7 @@ from esphome.const import (
     CONF_POLLING_INTERVAL,
     CONF_RESET_PIN,
     CONF_SPI,
-    #CONF_SPI_ID,
+    CONF_SPI_ID,
     CONF_CS_PIN,
     CONF_STATIC_IP,
     CONF_SUBNET,
@@ -194,7 +194,6 @@ RMII_SCHEMA = BASE_SCHEMA.extend(
 SPI_SCHEMA = BASE_SCHEMA.extend(
     cv.Schema(
         {
-#            cv.GenerateID(CONF_SPI_ID): cv.use_id(TYPE_CLASS[mode]),
             cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_INTERRUPT_PIN): pins.internal_gpio_input_pin_number,
             cv.Optional(CONF_RESET_PIN): pins.internal_gpio_output_pin_number,
@@ -206,6 +205,7 @@ SPI_SCHEMA = BASE_SCHEMA.extend(
                 cv.positive_time_period_milliseconds,
                 cv.Range(min=TimePeriodMilliseconds(milliseconds=1)),
             ),
+            cv.Optional(CONF_SPI_ID): cv.use_id(spi.SPIComponent),
         }
     ),
 )
@@ -274,6 +274,11 @@ def phy_register(address: int, value: int, page: int):
 @coroutine_with_priority(60.0)
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
+    # Just before await spi.register_spi_device:
+    if CONF_SPI_ID not in config:
+        # Fallback to default SPI bus if there is only one
+        config[CONF_SPI_ID] = await spi.get_default_spi_component()
+
     await cg.register_component(var, config)
 
     if config[CONF_TYPE] == "W5500":
