@@ -26,7 +26,7 @@ from esphome.const import (
     CONF_POLLING_INTERVAL,
     CONF_RESET_PIN,
     CONF_SPI,
-    CONF_SPI_ID,
+    #CONF_SPI_ID,
     CONF_CS_PIN,
     CONF_STATIC_IP,
     CONF_SUBNET,
