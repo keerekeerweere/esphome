@@ -276,7 +276,7 @@ async def to_code(config):
     await cg.register_component(var, config)
 
     if config[CONF_TYPE] == "W5500":
-        #await spi.register_spi_device(var, config)
+        await spi.register_spi_device(var, config)
 
         cg.add(var.set_cs_pin(config[CONF_CS_PIN]))
         if CONF_INTERRUPT_PIN in config:
