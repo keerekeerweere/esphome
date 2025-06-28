@@ -3,6 +3,7 @@ import logging
 from esphome import pins
 import esphome.codegen as cg
 from esphome.components.esp32 import add_idf_sdkconfig_option, get_esp32_variant
+from esphome.components import spi
 from esphome.components.esp32.const import (
     VARIANT_ESP32C3,
     VARIANT_ESP32S2,
@@ -13,7 +14,6 @@ from esphome.components.spi import CONF_INTERFACE_INDEX, get_spi_interface
 import esphome.config_validation as cv
 from esphome.const import (
     CONF_ADDRESS,
-    CONF_CLK_PIN,
     CONF_CS_PIN,
     CONF_DNS1,
     CONF_DNS2,
@@ -22,12 +22,11 @@ from esphome.const import (
     CONF_ID,
     CONF_INTERRUPT_PIN,
     CONF_MANUAL_IP,
-    CONF_MISO_PIN,
-    CONF_MOSI_PIN,
     CONF_PAGE_ID,
     CONF_POLLING_INTERVAL,
     CONF_RESET_PIN,
     CONF_SPI,
+    CONF_CS_PIN,
     CONF_STATIC_IP,
     CONF_SUBNET,
     CONF_TYPE,
@@ -191,12 +190,9 @@ RMII_SCHEMA = BASE_SCHEMA.extend(
     )
 )
 
-SPI_SCHEMA = BASE_SCHEMA.extend(
+SPI_SCHEMA = BASE_SCHEMA.extend(spi.spi_device_schema()).extend(
     cv.Schema(
         {
-            cv.Required(CONF_CLK_PIN): pins.internal_gpio_output_pin_number,
-            cv.Required(CONF_MISO_PIN): pins.internal_gpio_input_pin_number,
-            cv.Required(CONF_MOSI_PIN): pins.internal_gpio_output_pin_number,
             cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_INTERRUPT_PIN): pins.internal_gpio_input_pin_number,
             cv.Optional(CONF_RESET_PIN): pins.internal_gpio_output_pin_number,
@@ -279,9 +275,8 @@ async def to_code(config):
     await cg.register_component(var, config)
 
     if config[CONF_TYPE] == "W5500":
-        cg.add(var.set_clk_pin(config[CONF_CLK_PIN]))
-        cg.add(var.set_miso_pin(config[CONF_MISO_PIN]))
-        cg.add(var.set_mosi_pin(config[CONF_MOSI_PIN]))
+        await spi.register_spi_device(var, config)
+
         cg.add(var.set_cs_pin(config[CONF_CS_PIN]))
         if CONF_INTERRUPT_PIN in config:
             cg.add(var.set_interrupt_pin(config[CONF_INTERRUPT_PIN]))
