@@ -40,7 +40,7 @@ from esphome.core import CORE, TimePeriodMilliseconds, coroutine_with_priority
 import esphome.final_validate as fv
 
 CONFLICTS_WITH = ["wifi"]
-DEPENDENCIES = ["esp32"]
+DEPENDENCIES = ["esp32", "spi"]
 AUTO_LOAD = ["network"]
 LOGGER = logging.getLogger(__name__)
 
@@ -194,6 +194,7 @@ RMII_SCHEMA = BASE_SCHEMA.extend(
 SPI_SCHEMA = BASE_SCHEMA.extend(
     cv.Schema(
         {
+#            cv.GenerateID(CONF_SPI_ID): cv.use_id(TYPE_CLASS[mode]),
             cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_INTERRUPT_PIN): pins.internal_gpio_input_pin_number,
             cv.Optional(CONF_RESET_PIN): pins.internal_gpio_output_pin_number,
