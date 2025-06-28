@@ -63,7 +63,7 @@ class EthernetComponent : public Component,
   bool is_connected();
 
 #ifdef USE_ETHERNET_SPI
-  void set_cs_pin(uint8_t cs_pin);
+  //void set_cs_pin(uint8_t cs_pin);
   void set_interrupt_pin(uint8_t interrupt_pin);
   void set_reset_pin(uint8_t reset_pin);
   void set_clock_speed(int clock_speed);

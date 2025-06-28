@@ -274,34 +274,43 @@ def phy_register(address: int, value: int, page: int):
 @coroutine_with_priority(60.0)
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    # Just before await spi.register_spi_device:
-    if CONF_SPI_ID not in config:
-        # Fallback to default SPI bus if there is only one
-        config[CONF_SPI_ID] = await spi.get_default_spi_component()
-
     await cg.register_component(var, config)
 
     if config[CONF_TYPE] == "W5500":
+        # Correct fallback: only for W5500
+        if not config.get(CONF_SPI_ID):
+            config[CONF_SPI_ID] = await spi.get_default_spi_component()
+
         await spi.register_spi_device(var, config)
 
-        cg.add(var.set_cs_pin(config[CONF_CS_PIN]))
+        # ✅ Use proper GPIO expression for cs_pin
+        cs = await cg.gpio_pin_expression(config[CONF_CS_PIN])
+        cg.add(var.set_cs_pin(cs))
+
         if CONF_INTERRUPT_PIN in config:
-            cg.add(var.set_interrupt_pin(config[CONF_INTERRUPT_PIN]))
+            interrupt = await cg.gpio_pin_expression(config[CONF_INTERRUPT_PIN])
+            cg.add(var.set_interrupt_pin(interrupt))
         else:
             cg.add(var.set_polling_interval(config[CONF_POLLING_INTERVAL]))
+
         if _is_framework_spi_polling_mode_supported():
             cg.add_define("USE_ETHERNET_SPI_POLLING_SUPPORT")
+
         if CONF_RESET_PIN in config:
-            cg.add(var.set_reset_pin(config[CONF_RESET_PIN]))
+            reset = await cg.gpio_pin_expression(config[CONF_RESET_PIN])
+            cg.add(var.set_reset_pin(reset))
+
         cg.add(var.set_clock_speed(config[CONF_CLOCK_SPEED]))
 
         cg.add_define("USE_ETHERNET_SPI")
         if CORE.using_esp_idf:
             add_idf_sdkconfig_option("CONFIG_ETH_USE_SPI_ETHERNET", True)
             add_idf_sdkconfig_option("CONFIG_ETH_SPI_ETHERNET_W5500", True)
+
     elif config[CONF_TYPE] == "OPENETH":
         cg.add_define("USE_ETHERNET_OPENETH")
         add_idf_sdkconfig_option("CONFIG_ETH_USE_OPENETH", True)
+
     else:
         cg.add(var.set_phy_addr(config[CONF_PHY_ADDR]))
         cg.add(var.set_mdc_pin(config[CONF_MDC_PIN]))
