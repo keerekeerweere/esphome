@@ -103,7 +103,7 @@ MANUAL_IP_SCHEMA = cv.Schema(
     }
 )
 
-EthernetComponent = ethernet_ns.class_("EthernetComponent", cg.Component)
+EthernetComponent = ethernet_ns.class_("EthernetComponent", cg.Component, spi.SPIDevice)
 ManualIP = ethernet_ns.struct("ManualIP")
 
 
