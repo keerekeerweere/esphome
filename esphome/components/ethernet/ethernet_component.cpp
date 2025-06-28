@@ -47,7 +47,7 @@ void EthernetComponent::setup() {
   // TODO: START SPI GLOBAL
 #ifdef USE_ETHERNET_SPI
 
-  // this->spi_setup();
+  this->spi_setup();
 
   // TODO: END SPI GLOBAL
 #endif
@@ -86,8 +86,8 @@ void EthernetComponent::setup() {
 #endif
 
   spi_device_handle_t spi_handle = nullptr;
-  err = spi_bus_add_device(this->parent_->host_, &devcfg, &spi_handle);
-  ESPHL_ERROR_CHECK(err, "SPI bus add device error");
+  err = spi_bus_add_device(host, &devcfg, &spi_handle);
+  //ESPHL_ERROR_CHECK(err, "SPI bus add device error");
 
 //  err = spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
   //ESPHL_ERROR_CHECK(err, "SPI bus initialize error");
