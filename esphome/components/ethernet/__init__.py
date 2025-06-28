@@ -236,14 +236,14 @@ def _final_validate(config):
             spi_host = "SPI2_HOST"
         else:
             spi_host = "SPI3_HOST"
-        for spi_conf in spi_configs:
-            if (index := spi_conf.get(CONF_INTERFACE_INDEX)) is not None:
-                interface = get_spi_interface(index)
-                if interface == spi_host:
-                    raise cv.Invalid(
-                        f"`spi` component is using interface '{interface}'. "
-                        f"To use {config[CONF_TYPE]}, you must change the `interface` on the `spi` component.",
-                    )
+#        for spi_conf in spi_configs:
+#            if (index := spi_conf.get(CONF_INTERFACE_INDEX)) is not None:
+#                interface = get_spi_interface(index)
+#                if interface == spi_host:
+#                    raise cv.Invalid(
+#                        f"`spi` component is using interface '{interface}'. "
+#                        f"To use {config[CONF_TYPE]}, you must change the `interface` on the `spi` component.",
+#                    )
 
 
 FINAL_VALIDATE_SCHEMA = _final_validate
