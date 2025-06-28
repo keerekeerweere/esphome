@@ -4,6 +4,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
 #include "esphome/components/network/ip_address.h"
+#include "esphome/components/spi/spi.h"
 
 #ifdef USE_ESP32
 
@@ -48,7 +49,9 @@ enum class EthernetComponentState : uint8_t {
   CONNECTED,
 };
 
-class EthernetComponent : public Component {
+class EthernetComponent : public Component,
+                          public spi::SPIDevice<spi::BIT_ORDER_LSB_FIRST, spi::CLOCK_POLARITY_LOW,
+                                                spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_20MHZ> {
  public:
   EthernetComponent();
   void setup() override;
@@ -60,9 +63,6 @@ class EthernetComponent : public Component {
   bool is_connected();
 
 #ifdef USE_ETHERNET_SPI
-  void set_clk_pin(uint8_t clk_pin);
-  void set_miso_pin(uint8_t miso_pin);
-  void set_mosi_pin(uint8_t mosi_pin);
   void set_cs_pin(uint8_t cs_pin);
   void set_interrupt_pin(uint8_t interrupt_pin);
   void set_reset_pin(uint8_t reset_pin);
@@ -107,9 +107,6 @@ class EthernetComponent : public Component {
 
   std::string use_address_;
 #ifdef USE_ETHERNET_SPI
-  uint8_t clk_pin_;
-  uint8_t miso_pin_;
-  uint8_t mosi_pin_;
   uint8_t cs_pin_;
   int interrupt_pin_{-1};
   int reset_pin_{-1};

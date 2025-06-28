@@ -44,25 +44,38 @@ void EthernetComponent::setup() {
     delay(300);  // NOLINT
   }
 
+  // TODO: START SPI GLOBAL
+#ifdef USE_ETHERNET_SPI
+
+  // this->spi_setup();
+
+  // TODO: END SPI GLOBAL
+#endif
+
+
+
   esp_err_t err;
+
 
 #ifdef USE_ETHERNET_SPI
   // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
   gpio_install_isr_service(0);
 
-  spi_bus_config_t buscfg = {
-      .mosi_io_num = this->mosi_pin_,
-      .miso_io_num = this->miso_pin_,
-      .sclk_io_num = this->clk_pin_,
-      .quadwp_io_num = -1,
-      .quadhd_io_num = -1,
-      .data4_io_num = -1,
-      .data5_io_num = -1,
-      .data6_io_num = -1,
-      .data7_io_num = -1,
-      .max_transfer_sz = 0,
+  spi_device_interface_config_t devcfg = {
+      .command_bits = 16,  // Actually it's the address phase in W5500 SPI frame
+      .address_bits = 8,   // Actually it's the control phase in W5500 SPI frame
+      .dummy_bits = 0,
+      .mode = 0,
+      .duty_cycle_pos = 0,
+      .cs_ena_pretrans = 0,
+      .cs_ena_posttrans = 0,
+      .clock_speed_hz = this->clock_speed_,
+      .input_delay_ns = 0,
+      .spics_io_num = ((InternalGPIOPin *) this->cs_)->get_pin(),
       .flags = 0,
-      .intr_flags = 0,
+      .queue_size = 20,
+      .pre_cb = nullptr,
+      .post_cb = nullptr,
   };
 
 #if defined(USE_ESP32_VARIANT_ESP32C3) || defined(USE_ESP32_VARIANT_ESP32S2) || defined(USE_ESP32_VARIANT_ESP32S3) || \
@@ -72,8 +85,12 @@ void EthernetComponent::setup() {
   auto host = SPI3_HOST;
 #endif
 
-  err = spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
-  ESPHL_ERROR_CHECK(err, "SPI bus initialize error");
+  spi_device_handle_t spi_handle = nullptr;
+  err = spi_bus_add_device(this->parent_->host_, &devcfg, &spi_handle);
+  ESPHL_ERROR_CHECK(err, "SPI bus add device error");
+
+//  err = spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
+  //ESPHL_ERROR_CHECK(err, "SPI bus initialize error");
 #endif
 
   err = esp_netif_init();
@@ -89,22 +106,7 @@ void EthernetComponent::setup() {
   eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
 
 #ifdef USE_ETHERNET_SPI  // Configure SPI interface and Ethernet driver for specific SPI module
-  spi_device_interface_config_t devcfg = {
-      .command_bits = 16,  // Actually it's the address phase in W5500 SPI frame
-      .address_bits = 8,   // Actually it's the control phase in W5500 SPI frame
-      .dummy_bits = 0,
-      .mode = 0,
-      .duty_cycle_pos = 0,
-      .cs_ena_pretrans = 0,
-      .cs_ena_posttrans = 0,
-      .clock_speed_hz = this->clock_speed_,
-      .input_delay_ns = 0,
-      .spics_io_num = this->cs_pin_,
-      .flags = 0,
-      .queue_size = 20,
-      .pre_cb = nullptr,
-      .post_cb = nullptr,
-  };
+
 
 #if ESP_IDF_VERSION_MAJOR >= 5
   eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(host, &devcfg);
@@ -330,11 +332,8 @@ void EthernetComponent::dump_config() {
   this->dump_connect_params_();
 #ifdef USE_ETHERNET_SPI
   ESP_LOGCONFIG(TAG,
-                "  CLK Pin: %u\n"
-                "  MISO Pin: %u\n"
-                "  MOSI Pin: %u\n"
                 "  CS Pin: %u",
-                this->clk_pin_, this->miso_pin_, this->mosi_pin_, this->cs_pin_);
+                this->cs_pin_);
 #ifdef USE_ETHERNET_SPI_POLLING_SUPPORT
   if (this->polling_interval_ != 0) {
     ESP_LOGCONFIG(TAG, "  Polling Interval: %lu ms", this->polling_interval_);
@@ -561,9 +560,6 @@ void EthernetComponent::dump_connect_params_() {
 }
 
 #ifdef USE_ETHERNET_SPI
-void EthernetComponent::set_clk_pin(uint8_t clk_pin) { this->clk_pin_ = clk_pin; }
-void EthernetComponent::set_miso_pin(uint8_t miso_pin) { this->miso_pin_ = miso_pin; }
-void EthernetComponent::set_mosi_pin(uint8_t mosi_pin) { this->mosi_pin_ = mosi_pin; }
 void EthernetComponent::set_cs_pin(uint8_t cs_pin) { this->cs_pin_ = cs_pin; }
 void EthernetComponent::set_interrupt_pin(uint8_t interrupt_pin) { this->interrupt_pin_ = interrupt_pin; }
 void EthernetComponent::set_reset_pin(uint8_t reset_pin) { this->reset_pin_ = reset_pin; }
