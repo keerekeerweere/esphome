@@ -190,7 +190,7 @@ RMII_SCHEMA = BASE_SCHEMA.extend(
     )
 )
 
-SPI_SCHEMA = BASE_SCHEMA.extend(spi.spi_device_schema()).extend(
+SPI_SCHEMA = BASE_SCHEMA.extend(
     cv.Schema(
         {
             cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_number,
