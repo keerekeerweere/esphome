@@ -137,6 +137,11 @@ void Dsmr::receive_telegram_() {
   while (this->available_within_timeout_()) {
     const char c = this->read();
 
+    // Forward RX to TX immediately if enabled
+    if (this->forward_to_tx_) {
+      this->write_byte(static_cast<uint8_t>(c));
+    }
+
     // Find a new telegram header, i.e. forward slash.
     if (c == '/') {
       ESP_LOGV(TAG, "Header of telegram found");
@@ -154,7 +159,7 @@ void Dsmr::receive_telegram_() {
     }
 
     // Some v2.2 or v3 meters will send a new value which starts with '('
-    // in a new line, while the value belongs to the previous ObisId. For
+    // in a new line, while value belongs to previous ObisId. For
     // proper parsing, remove these new line characters.
     if (c == '(') {
       while (true) {
@@ -190,6 +195,11 @@ void Dsmr::receive_telegram_() {
 void Dsmr::receive_encrypted_telegram_() {
   while (this->available_within_timeout_()) {
     const char c = this->read();
+
+    // Forward RX to TX immediately if enabled
+    if (this->forward_to_tx_) {
+      this->write_byte(static_cast<uint8_t>(c));
+    }
 
     // Find a new telegram start byte.
     if (!this->header_found_) {
@@ -281,8 +291,9 @@ void Dsmr::dump_config() {
   ESP_LOGCONFIG(TAG,
                 "DSMR:\n"
                 "  Max telegram length: %d\n"
-                "  Receive timeout: %.1fs",
-                this->max_telegram_len_, this->receive_timeout_ / 1e3f);
+                "  Receive timeout: %.1fs\n"
+                "  Forward to TX: %s",
+                this->max_telegram_len_, this->receive_timeout_ / 1e3f, this->forward_to_tx_ ? "YES" : "NO");
   if (this->request_pin_ != nullptr) {
     LOG_PIN("  Request Pin: ", this->request_pin_);
   }

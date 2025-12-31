@@ -14,6 +14,7 @@ AUTO_LOAD = ["sensor", "text_sensor"]
 CONF_CRC_CHECK = "crc_check"
 CONF_DECRYPTION_KEY = "decryption_key"
 CONF_DSMR_ID = "dsmr_id"
+CONF_FORWARD_TO_TX = "forward_to_tx"
 CONF_GAS_MBUS_ID = "gas_mbus_id"
 CONF_WATER_MBUS_ID = "water_mbus_id"
 CONF_MAX_TELEGRAM_LENGTH = "max_telegram_length"
@@ -49,6 +50,7 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(Dsmr),
             cv.Optional(CONF_DECRYPTION_KEY): _validate_key,
             cv.Optional(CONF_CRC_CHECK, default=True): cv.boolean,
+            cv.Optional(CONF_FORWARD_TO_TX, default=False): cv.boolean,
             cv.Optional(CONF_GAS_MBUS_ID, default=1): cv.int_,
             cv.Optional(CONF_WATER_MBUS_ID, default=2): cv.int_,
             cv.Optional(CONF_MAX_TELEGRAM_LENGTH, default=1500): cv.int_,
@@ -78,6 +80,7 @@ async def to_code(config):
         cg.add(var.set_request_pin(request_pin))
     cg.add(var.set_request_interval(config[CONF_REQUEST_INTERVAL].total_milliseconds))
     cg.add(var.set_receive_timeout(config[CONF_RECEIVE_TIMEOUT].total_milliseconds))
+    cg.add(var.set_forward_to_tx(config[CONF_FORWARD_TO_TX]))
 
     cg.add_build_flag("-DDSMR_GAS_MBUS_ID=" + str(config[CONF_GAS_MBUS_ID]))
     cg.add_build_flag("-DDSMR_WATER_MBUS_ID=" + str(config[CONF_WATER_MBUS_ID]))
